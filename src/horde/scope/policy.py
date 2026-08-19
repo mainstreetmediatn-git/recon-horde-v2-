@@ -21,7 +21,11 @@ class ScopeEngine:
                     reason=f"matched_{scope.kind.value}_scope",
                     normalized_target=normalized.canonical,
                 )
-        return ScopeDecision(False, reason="no_active_scope_match", normalized_target=normalized.canonical)
+        return ScopeDecision(
+            allowed=False,
+            reason="no_active_scope_match",
+            normalized_target=normalized.canonical,
+        )
 
     def _matches(self, target: NormalizedTarget, scope: AuthorizedScope) -> bool:
         value = scope.value.strip()
