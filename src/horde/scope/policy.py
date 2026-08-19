@@ -15,7 +15,12 @@ class ScopeEngine:
             return ScopeDecision(allowed=False, reason=f"malformed_target:{exc}")
         for scope in scopes:
             if scope.active and self._matches(normalized, scope):
-                return ScopeDecision(True, scope.id, f"matched_{scope.kind.value}_scope", normalized.canonical)
+                return ScopeDecision(
+                    allowed=True,
+                    matched_scope_id=scope.id,
+                    reason=f"matched_{scope.kind.value}_scope",
+                    normalized_target=normalized.canonical,
+                )
         return ScopeDecision(False, reason="no_active_scope_match", normalized_target=normalized.canonical)
 
     def _matches(self, target: NormalizedTarget, scope: AuthorizedScope) -> bool:
