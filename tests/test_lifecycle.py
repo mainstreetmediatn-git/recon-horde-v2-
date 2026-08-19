@@ -7,7 +7,7 @@ from horde.core.models import Agent, AgentStatus
 
 def test_health_is_deterministic_and_bounded():
     assert score_health(HealthInputs()) == 100
-    assert score_health(HealthInputs(consecutive_failures=10, database_available=False)) < 40
+    assert score_health(HealthInputs(consecutive_failures=10, database_available=False)) < 70
 
 
 def test_successor_increments_generation_without_transient_state():

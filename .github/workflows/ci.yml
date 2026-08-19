@@ -14,8 +14,4 @@ jobs:
       - run: ruff check .
       - run: pytest -q
       - run: python -m compileall src
-      - run: python - <<'PY'
-          from pathlib import Path
-          assert list(Path('supabase/migrations').glob('*.sql'))
-          print('migration files present')
-        PY
+      - run: python -c "from pathlib import Path; assert list(Path('supabase/migrations').glob('*.sql')); print('migration files present')"

@@ -23,7 +23,7 @@ app.add_typer(scope_app, name="scope")
 app.add_typer(tools_app, name="tools")
 
 
-@app.command()
+@app.command("doctor")
 def doctor_cmd(json_output: bool = typer.Option(False, "--json")) -> None:
     """Check runtime prerequisites."""
     configure_logging(get_settings().log_level)
