@@ -1,0 +1,12 @@
+services:
+  horde-worker:
+    build: .
+    command: ["worker-once", "--target", "example.com", "--project-id", "00000000-0000-0000-0000-000000000000"]
+    env_file: [.env]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: [/tmp]
+    volumes: [horde-data:/var/lib/horde]
+volumes:
+  horde-data:
