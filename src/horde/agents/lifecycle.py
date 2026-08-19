@@ -1,7 +1,5 @@
 """Finite agent lifecycle with bounded successor generation."""
 
-from dataclasses import replace
-
 from horde.core.models import Agent, AgentStatus, utcnow
 
 

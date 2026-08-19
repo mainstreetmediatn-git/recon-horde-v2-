@@ -6,7 +6,6 @@ from uuid import UUID
 
 import typer
 
-from horde.agents.lifecycle import AgentLifecycle
 from horde.config import get_settings
 from horde.core.models import Agent, Job
 from horde.diagnostics.doctor import doctor

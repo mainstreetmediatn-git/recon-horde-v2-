@@ -61,7 +61,7 @@ class ReconTool(ABC):
         except TimeoutError:
             process.kill()
             await process.wait()
-            raise TimeoutError(f"{executable} timed out")
+            raise TimeoutError(f"{executable} timed out") from None
         return ProcessResult(
             process.returncode or 0,
             stdout[: context.max_output_bytes].decode("utf-8", errors="replace"),

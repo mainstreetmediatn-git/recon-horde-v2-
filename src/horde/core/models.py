@@ -1,6 +1,6 @@
 """Shared domain models used by adapters, workers, and persistence."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 from uuid import UUID, uuid4
@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 class JobState(StrEnum):

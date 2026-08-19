@@ -3,7 +3,7 @@
 import asyncio
 import socket
 import ssl
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from .base import ReconTool, ToolContext, ToolResult
 
@@ -29,7 +29,7 @@ class TlsTool(ReconTool):
                     expires = cert.get("notAfter")
                     return {"host": host, "port": port, "subject": str(cert.get("subject")),
                             "issuer": str(cert.get("issuer")), "sans": sans,
-                            "expires_at": datetime.strptime(expires, "%b %d %H:%M:%S %Y %Z").replace(tzinfo=timezone.utc).isoformat() if expires else None,
+                            "expires_at": datetime.strptime(expires, "%b %d %H:%M:%S %Y %Z").replace(tzinfo=UTC).isoformat() if expires else None,
                             "protocol": conn.version()}
         try:
             return ToolResult(tool=self.name, target=target, ok=True, data=await asyncio.to_thread(inspect))
