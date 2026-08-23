@@ -13,7 +13,9 @@ def test_ip_and_cidr():
     engine = ScopeEngine()
     assert engine.check("192.0.2.10", [AuthorizedScope(kind=ScopeKind.CIDR, value="192.0.2.0/24")]).allowed
     assert not engine.check("192.0.3.10", [AuthorizedScope(kind=ScopeKind.CIDR, value="192.0.2.0/24")]).allowed
-    assert engine.check("2001:db8::1", [AuthorizedScope(kind=ScopeKind.IP, value="2001:db8::1")]).allowed
+    decision = engine.check("2001:0db8::1", [AuthorizedScope(kind=ScopeKind.IP, value="2001:db8::1")])
+    assert decision.allowed
+    assert decision.normalized_target == "2001:db8::1/"
 
 
 def test_url_subtree_boundary_and_inactive_scope():
