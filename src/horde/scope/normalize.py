@@ -19,6 +19,17 @@ def normalize_target(value: str) -> NormalizedTarget:
     raw = value.strip()
     if not raw or any(ord(char) < 32 for char in raw):
         raise ValueError("target is empty or contains control characters")
+
+    # A bare IPv6 literal contains colons that URL parsers interpret as port
+    # delimiters. Normalize IP literals before attempting URL parsing.
+    try:
+        bare_ip = ip_address(raw)
+    except ValueError:
+        bare_ip = None
+    if bare_ip is not None:
+        host = str(bare_ip)
+        return NormalizedTarget(raw, host, "/", None, bare_ip, f"{host}/")
+
     candidate = raw if "://" in raw else f"//{raw}"
     parsed = urlsplit(candidate)
     if not parsed.hostname:
