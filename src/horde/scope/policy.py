@@ -1,7 +1,6 @@
 """Deterministic, deny-by-default authorization policy."""
 
 from ipaddress import ip_address, ip_network
-from urllib.parse import urlsplit
 
 from .models import AuthorizedScope, ScopeDecision, ScopeKind
 from .normalize import NormalizedTarget, normalize_target
@@ -36,20 +35,35 @@ class ScopeEngine:
                 return target.ip is not None and target.ip in ip_network(value, strict=False)
             except ValueError:
                 return False
+
         if scope.kind in (ScopeKind.DOMAIN, ScopeKind.SUBDOMAIN):
             try:
                 domain = value.rstrip(".").encode("idna").decode("ascii").lower()
             except UnicodeError:
                 return False
             return target.host == domain or target.host.endswith(f".{domain}")
+
+        if scope.kind not in (ScopeKind.URL, ScopeKind.URL_SUBTREE):
+            return False
+
         try:
-            scope_url = urlsplit(value if "://" in value else f"https://{value}")
-            scope_host = (scope_url.hostname or "").rstrip(".").lower()
+            scope_target = normalize_target(value if "://" in value else f"https://{value}")
         except ValueError:
             return False
-        if scope_host != target.host:
+
+        # URL authorization is endpoint-specific: scheme, effective port, host,
+        # and normalized path all participate in the decision.
+        if (
+            target.scheme != scope_target.scheme
+            or target.port != scope_target.port
+            or target.host != scope_target.host
+        ):
             return False
-        scope_path = scope_url.path or "/"
+
         if scope.kind is ScopeKind.URL:
-            return target.path == scope_path
-        return target.path == scope_path or target.path.startswith(scope_path.rstrip("/") + "/")
+            return target.path == scope_target.path
+
+        root = scope_target.path.rstrip("/") or "/"
+        if root == "/":
+            return target.path.startswith("/")
+        return target.path == root or target.path.startswith(root + "/")
