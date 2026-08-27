@@ -26,19 +26,21 @@ class Worker:
 
     async def run_once(self) -> bool:
         self.queue.recover_expired()
-        job = self.queue.claim(str(self.agent.id), lease_seconds=max(30, int(self.settings.tool_timeout_seconds * 2)))
+        worker_id = str(self.agent.id)
+        job = self.queue.claim(worker_id, lease_seconds=max(30, int(self.settings.tool_timeout_seconds * 2)))
         if job is None:
             self.lifecycle.heartbeat(self.agent, self.agent.health_score)
             return False
         started = monotonic()
         decision = self.scope_engine.check(job.target, self.scopes)
         if not decision.allowed:
-            self.queue.fail(job.id, decision.reason, retry=False)
+            self.queue.fail(job.id, worker_id, decision.reason, retry=False)
             self.lifecycle.cycle_complete(self.agent, False)
+            self.lifecycle.heartbeat(self.agent, self.agent.health_score)
             self.events.append(ExecutionEvent(agent_id=self.agent.id, job_id=job.id, event="scope_denied", details=decision.model_dump()))
             return True
         try:
-            self.queue.mark_running(job.id)
+            self.queue.mark_running(job.id, worker_id)
             tool = self.registry.get(job.tool)
             if job.tool not in self.settings.tool_allowlist:
                 raise PermissionError(f"tool {job.tool!r} is not allowlisted")
@@ -48,11 +50,11 @@ class Worker:
                 execute=self.settings.execute_tools,
             ))
             if result.ok:
-                self.queue.complete(job.id)
+                self.queue.complete(job.id, worker_id)
                 self.lifecycle.cycle_complete(self.agent, True)
                 event = "job_succeeded"
             else:
-                self.queue.fail(job.id, result.error or "tool failed")
+                self.queue.fail(job.id, worker_id, result.error or "tool failed")
                 self.lifecycle.cycle_complete(self.agent, False)
                 event = "job_failed"
             self.events.append(ExecutionEvent(agent_id=self.agent.id, job_id=job.id, event=event,
@@ -60,7 +62,10 @@ class Worker:
                                               details={"tool": job.tool, "result": result.model_dump(exclude={"raw"})}))
         except Exception as exc:  # worker isolation: one job cannot kill the worker
             logger.exception("job execution failed", extra={"job_id": str(job.id), "agent_id": str(self.agent.id)})
-            self.queue.fail(job.id, str(exc))
+            try:
+                self.queue.fail(job.id, worker_id, str(exc))
+            except (PermissionError, ValueError):
+                logger.warning("stale worker could not mutate job state", extra={"job_id": str(job.id), "agent_id": str(self.agent.id)})
             self.lifecycle.cycle_complete(self.agent, False)
             self.events.append(ExecutionEvent(agent_id=self.agent.id, job_id=job.id, event="worker_exception",
                                               duration_ms=round((monotonic() - started) * 1000), details={"error": str(exc)}))
