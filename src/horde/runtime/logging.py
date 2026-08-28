@@ -3,7 +3,6 @@
 import logging
 import re
 
-
 _BEARER_RE = re.compile(r"(?i)\bBearer\s+[^\s,;]+")
 _KEY_VALUE_SECRET_RE = re.compile(
     r"(?i)(SUPABASE_SERVICE_ROLE_KEY|service_role)(\s*[:=]\s*)([^\s,;]+)"
