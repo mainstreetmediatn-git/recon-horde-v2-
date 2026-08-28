@@ -1,8 +1,8 @@
 """Target normalization shared by every execution path."""
 
+import posixpath
 from dataclasses import dataclass
 from ipaddress import ip_address
-import posixpath
 from urllib.parse import urlsplit
 
 
