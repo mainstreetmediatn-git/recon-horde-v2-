@@ -1,8 +1,8 @@
 """Target normalization shared by every execution path."""
 
+import posixpath
 from dataclasses import dataclass
 from ipaddress import ip_address
-import posixpath
 from urllib.parse import urlsplit
 
 
@@ -51,6 +51,8 @@ def normalize_target(value: str) -> NormalizedTarget:
         parsed_port = parsed.port
     except ValueError as exc:
         raise ValueError("target has an invalid port") from exc
+    if parsed.username is not None:
+        raise ValueError("target contains userinfo")
     if not parsed.hostname:
         raise ValueError("target has no hostname")
     try:
