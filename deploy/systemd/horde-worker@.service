@@ -1,0 +1,23 @@
+[Unit]
+Description=Recon Horde worker %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=horde
+Group=horde
+WorkingDirectory=/opt/horde
+EnvironmentFile=-/etc/horde/%i.env
+ExecStart=/opt/horde/.venv/bin/horde worker-once --target example.com --project-id 00000000-0000-0000-0000-000000000000
+Restart=on-failure
+RestartSec=10
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/horde
+NoNewPrivileges=true
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target
